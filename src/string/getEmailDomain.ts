@@ -1,5 +1,6 @@
 /**
  * Retrieve domain from email
+ *
  * @param {string} email
  * @return {string}
  * */
