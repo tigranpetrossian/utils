@@ -1,32 +1,33 @@
 import type React from 'react';
-import { useState } from 'react';
-
-const MAX_CURSOR_DRIFT = 5;
+import { useCallback, useState } from 'react';
 
 /**
- * Selects the target element's contents on click, unless the cursor is dragged beyond the threshold,
- * indicating a manual selection intention from the user.
+ * Selects the target element's contents on click, unless the user is selecting manually.
  * */
-export function useSelectOnInputClick(ref: React.RefObject<HTMLInputElement>) {
-  const [cursorX, setCursorX] = useState<number | null>(null);
+export function useSelectOnInputClick() {
+  const [mustSelect, setMustSelect] = useState(true);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setCursorX(e.clientX);
-  };
+  const handleFocus = useCallback(() => {
+    setMustSelect(true);
+  }, []);
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (!ref.current) {
-      return;
-    }
+  const handleMouseLeave = useCallback(() => {
+    setMustSelect(false);
+  }, []);
 
-    if (cursorX === null || Math.abs(e.clientX - cursorX) < MAX_CURSOR_DRIFT) {
-      ref.current.select();
-      setCursorX(null);
-    }
-  };
+  const handleMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLInputElement>) => {
+      if (mustSelect && event.currentTarget.selectionStart === event.currentTarget.selectionEnd) {
+        event.currentTarget.select();
+        setMustSelect(false);
+      }
+    },
+    [mustSelect]
+  );
 
   return {
-    onMouseDown: handleMouseDown,
+    onMouseLeave: handleMouseLeave,
     onMouseUp: handleMouseUp,
+    onFocus: handleFocus,
   };
 }
